@@ -219,6 +219,8 @@ pub trait OptionExt<T> {
 }
 
 impl<T> OptionExt<T> for Option<T> {
+    #[inline]
+    #[track_caller]
     fn unwrap_or_log(self) -> T {
         match self {
             Some(val) => val,
@@ -269,7 +271,8 @@ impl<T> OptionExt<T> for Option<T> {
 #[cold]
 #[track_caller]
 fn failed(msg: &str) -> ! {
-    tracing::error!("{}", msg);
+    let caller = std::panic::Location::caller();
+    tracing::error!("-> {}: {}: {}", caller.file(), caller.line(), msg);
 
     #[cfg(feature = "panic-quiet")]
     panic!();
@@ -281,7 +284,8 @@ fn failed(msg: &str) -> ! {
 #[cold]
 #[track_caller]
 fn failed_with(msg: &str, value: &dyn fmt::Debug) -> ! {
-    tracing::error!("{}: {:?}", msg, &value);
+    let caller = std::panic::Location::caller();
+    tracing::error!("-> {}: {}: {}: {:?}", caller.file(), caller.line(), msg, &value);
 
     #[cfg(feature = "panic-quiet")]
     panic!();
